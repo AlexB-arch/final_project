@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">final</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="welcome">"Welcome !"</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="login_failed">"Login failed"</string>
+    <string name="login_success">"Login success"</string>
+    <string name="login_processing">"Login processing"</string>
+    <string name="login_cancelled">"Login cancelled"</string>
+    <string name="login_error">"Login error"</string>
+    <string name="login_timeout">Login timeout</string>
+    <string name="login_unknown">Login unknown</string>
+    <string name="login_no_internet">Login no internet</string>
+    <string name="login_no_server">Login no server</string>
+    <string name="login_no_response">Login no response</string>
+    <string name="login_no_data">Login no data</string>
+    <string name="login_no_connection">Login no connection</string>
+    <string name="login_no_network">Login no network</string>
+    <string name="login_no_network_permission">Login no network permission</string>
+    <string name="register">No account yet? Register here.</string>
+</resources>
