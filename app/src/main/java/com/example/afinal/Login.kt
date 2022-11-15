@@ -1,32 +1,33 @@
 package com.example.afinal
 
-import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.auth.FirebaseAuth
-import android.os.Bundle
-import com.example.afinal.R
-import android.widget.EditText
-import android.widget.Toast
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.firebase.auth.AuthResult
-import com.google.firebase.auth.FirebaseUser
 import android.content.Intent
+import android.os.Bundle
 import android.view.View
 import android.widget.Button
-import com.example.afinal.MainActivity
+import android.widget.EditText
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.AuthResult
+import com.google.firebase.auth.FirebaseAuth
 
 class Login : AppCompatActivity() {
+
     // Firebase Authentication
     private var mAuth: FirebaseAuth? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance()
+
         val email = findViewById<EditText>(R.id.login_email)
         val password = findViewById<EditText>(R.id.login_password)
         val loginButton = findViewById<Button>(R.id.button_login)
+        val registerButton = findViewById<Button>(R.id.button_register)
+
         loginButton.setOnClickListener { v: View? ->
             val emailText = email.text.toString()
             val passwordText = password.text.toString()
@@ -44,6 +45,11 @@ class Login : AppCompatActivity() {
                         }
                     }
             }
+        }
+
+        registerButton.setOnClickListener { v: View? ->
+            val intent = Intent(this@Login, Register::class.java)
+            startActivity(intent)
         }
     }
 
