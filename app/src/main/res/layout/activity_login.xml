@@ -13,26 +13,31 @@
         android:ems="10"
         android:hint="@string/prompt_email"
         android:inputType="textEmailAddress"
-        tools:layout_editor_absoluteX="100dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         tools:layout_editor_absoluteY="296dp" />
 
     <EditText
         android:id="@+id/login_password"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:ems="10"
         android:hint="@string/prompt_password"
         android:inputType="textPassword"
-        tools:layout_editor_absoluteX="101dp"
-        tools:layout_editor_absoluteY="389dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/login_email" />
 
     <Button
         android:id="@+id/button_login"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="Log In"
-        tools:layout_editor_absoluteX="158dp"
-        tools:layout_editor_absoluteY="480dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/login_password" />
 
     <TextView
         android:id="@+id/textView"
@@ -52,4 +57,5 @@
         android:text="Register"
         app:layout_constraintBottom_toBottomOf="parent"
         tools:layout_editor_absoluteX="152dp" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

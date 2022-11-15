@@ -6,7 +6,8 @@ class UserModel {
     var email: String? = null
     var password: String? = null
     var phone: String? = null
-    var address: String? = null
+    var address_line_1: String? = null
+    var address_line_2: String? = null
     var city: String? = null
     var state: String? = null
     var zip: String? = null
@@ -17,6 +18,7 @@ class UserModel {
     var totalDays: Long = 0
     var totalPerDiem: Long = 0
     var totalReimbursement: Long = 0
+    var totalSaved: Long = 0
 
     constructor() {}
     constructor(
@@ -25,7 +27,8 @@ class UserModel {
         email: String?,
         password: String?,
         phone: String?,
-        address: String?,
+        address_line_1: String?,
+        address_line_2: String?,
         city: String?,
         state: String?,
         zip: String?,
@@ -35,14 +38,16 @@ class UserModel {
         totalMiles: Long,
         totalDays: Long,
         totalPerDiem: Long,
-        totalReimbursement: Long
+        totalReimbursement: Long,
+        totalSaved: Long
     ) {
         this.firstName = firstName
         this.lastName = lastName
         this.email = email
         this.password = password
         this.phone = phone
-        this.address = address
+        this.address_line_1 = address_line_1
+        this.address_line_2 = address_line_2
         this.city = city
         this.state = state
         this.zip = zip
@@ -53,6 +58,7 @@ class UserModel {
         this.totalDays = totalDays
         this.totalPerDiem = totalPerDiem
         this.totalReimbursement = totalReimbursement
+        this.totalSaved = totalSaved
     }
 
     override fun toString(): String {
@@ -62,7 +68,8 @@ class UserModel {
                 ", email='" + email + '\'' +
                 ", password='" + password + '\'' +
                 ", phone='" + phone + '\'' +
-                ", address='" + address + '\'' +
+                ", address_line_1='" + address_line_1 + '\'' +
+                ", address_line_2='" + address_line_2 + '\'' +
                 ", city='" + city + '\'' +
                 ", state='" + state + '\'' +
                 ", zip='" + zip + '\'' +
@@ -73,6 +80,7 @@ class UserModel {
                 ", totalDays=" + totalDays +
                 ", totalPerDiem=" + totalPerDiem +
                 ", totalReimbursement=" + totalReimbursement +
+                ", totalSaved=" + totalSaved +
                 '}'
     }
 }
