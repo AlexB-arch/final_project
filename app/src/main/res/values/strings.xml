@@ -23,4 +23,9 @@
     <string name="login_no_network">Login no network</string>
     <string name="login_no_network_permission">Login no network permission</string>
     <string name="register">No account yet? Register here.</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="label_account_details">Account Details</string>
+    <string name="label_personal_information">Personal Information</string>
+    <string name="label_address">Address</string>
+    <string name="button_register">Register</string>
 </resources>
