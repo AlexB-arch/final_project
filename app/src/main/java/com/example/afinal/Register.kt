@@ -20,6 +20,9 @@ class Register : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
 
+        // Action bar title
+        supportActionBar?.title = "Register"
+
         // UI elements
         val username = findViewById<EditText>(R.id.register_username)
         val email = findViewById<EditText>(R.id.register_email)

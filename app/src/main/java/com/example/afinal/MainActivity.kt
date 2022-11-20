@@ -22,11 +22,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Action bar title
+        supportActionBar?.title = "Home"
+
         // UI elements
         val welcomeText = findViewById<TextView>(R.id.test)
-
-        // Menu
-
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance()
@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    // User menu options
+    // User menu options selected
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_logout -> {

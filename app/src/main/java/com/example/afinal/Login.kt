@@ -13,11 +13,12 @@ class Login : AppCompatActivity() {
     // Firebase Authentication
     private var mAuth: FirebaseAuth? = null
 
-    // UI elements
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+
+        // Action bar title
+        supportActionBar?.title = "Login"
 
         // UI elements
         val email = findViewById<EditText>(R.id.login_email)
