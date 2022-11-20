@@ -28,4 +28,22 @@
     <string name="label_personal_information">Personal Information</string>
     <string name="label_address">Address</string>
     <string name="button_register">Register</string>
+    <string name="hint_username">Username</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_first_name">First Name</string>
+    <string name="hint_last_name">Last Name</string>
+    <string name="hint_middle_name">Middle Name</string>
+    <string name="hint_address1">Address Line 1</string>
+    <string name="hint_address2">Address Line 2</string>
+    <string name="hint_city">City</string>
+    <string name="hint_state">State</string>
+    <string name="hint_zip">Zip</string>
+    <string name="hint_country">Country</string>
+    <string name="hint_phone">Phone</string>
+    <string name="hint_mobile">Mobile</string>
+    <string name="hint_fax">Fax</string>
+    <string name="hint_website">Website</string>
+    <string name="hint_company">Company</string>
+
 </resources>
