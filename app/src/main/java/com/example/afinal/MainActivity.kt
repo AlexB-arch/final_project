@@ -3,6 +3,8 @@ package com.example.afinal
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -22,6 +24,9 @@ class MainActivity : AppCompatActivity() {
 
         // UI elements
         val welcomeText = findViewById<TextView>(R.id.test)
+
+        // Menu
+
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance()
@@ -44,6 +49,28 @@ class MainActivity : AppCompatActivity() {
                 val lastName = snapshot.child("lastName").value.toString()
                 welcomeText.text = "Welcome $firstName $lastName"
             }
+        }
+    }
+
+    // User menu inflater
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    // User menu options
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_logout -> {
+                // Sign out user
+                mAuth!!.signOut()
+                // Go to Login Page
+                val intent = Intent(this@MainActivity, Login::class.java)
+                startActivity(intent)
+                finish()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 }
