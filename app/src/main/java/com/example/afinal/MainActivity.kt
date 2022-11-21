@@ -27,6 +27,7 @@ class MainActivity : AppCompatActivity() {
 
         // UI elements
         val welcomeText = findViewById<TextView>(R.id.test)
+        val fab_newScan = findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab_new_scan)
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance()
@@ -49,6 +50,12 @@ class MainActivity : AppCompatActivity() {
                 val lastName = snapshot.child("lastName").value.toString()
                 welcomeText.text = "Welcome $firstName $lastName"
             }
+        }
+
+        // Go to Receipt Scanner
+        fab_newScan.setOnClickListener {
+            val intent = Intent(this@MainActivity, ReceiptScanner::class.java)
+            startActivity(intent)
         }
     }
 
