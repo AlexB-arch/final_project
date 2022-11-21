@@ -1,6 +1,5 @@
 package com.example.afinal
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
@@ -71,7 +70,7 @@ class MainActivity : AppCompatActivity() {
             R.id.action_logout -> {
                 // Sign out user
                 mAuth!!.signOut()
-                // Go to Login Page
+                // Go back to Login Page
                 val intent = Intent(this@MainActivity, Login::class.java)
                 startActivity(intent)
                 finish()

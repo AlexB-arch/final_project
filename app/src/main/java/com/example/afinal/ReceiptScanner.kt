@@ -2,6 +2,7 @@ package com.example.afinal
 
 import android.content.ContentValues
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -16,14 +17,11 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.video.Recorder
-import androidx.camera.video.Recording
-import androidx.camera.video.VideoCapture
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.google.android.gms.tasks.Task
+import com.google.firebase.functions.FirebaseFunctions
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -35,13 +33,11 @@ class ReceiptScanner : AppCompatActivity() {
 
     // Class variables
     private var imageCapture: ImageCapture? = null
-    private var videoCapture: VideoCapture<Recorder>? = null
-    private var recording: Recording? = null
 
     private lateinit var cameraExecutor: ExecutorService
 
-    // Text Recognition
-    private var recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    // Firebase Functions
+    private lateinit var functions: FirebaseFunctions
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,11 +47,13 @@ class ReceiptScanner : AppCompatActivity() {
         supportActionBar?.title = "Receipt Scanner"
 
         // UI elements
-        val button_photo = findViewById<Button>(R.id.button_capture_photo)
-        val button_video = findViewById<Button>(R.id.button_capture_video)
+        val buttonPhoto = findViewById<Button>(R.id.button_capture_photo)
 
         // Initialize device's camera
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+
+        // Initialize Firebase Functions
+        functions = FirebaseFunctions.getInstance()
 
         // Get camera permissions
         if (allPermissionsGranted()) {
@@ -67,8 +65,7 @@ class ReceiptScanner : AppCompatActivity() {
         }
 
         // Add a listener to the Capture button
-        button_photo.setOnClickListener { takePhoto() }
-        button_video.setOnClickListener { captureVideo() }
+        buttonPhoto.setOnClickListener { takePhoto() }
     }
 
     // Function to start camera
@@ -77,7 +74,7 @@ class ReceiptScanner : AppCompatActivity() {
 
         cameraProviderFuture.addListener(Runnable {
             // UI element for camera preview
-            val scanner_preview = findViewById<PreviewView>(R.id.scanner_viewfinder)
+            val scannerPreview = findViewById<PreviewView>(R.id.scanner_viewfinder)
 
             // Used to bind the lifecycle of cameras to the lifecycle owner
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
@@ -86,7 +83,7 @@ class ReceiptScanner : AppCompatActivity() {
             val preview = Preview.Builder()
                 .build()
                 .also {
-                    it.setSurfaceProvider(scanner_preview.surfaceProvider)
+                    it.setSurfaceProvider(scannerPreview.surfaceProvider)
                 }
 
             // Select back camera as a default
@@ -137,13 +134,32 @@ class ReceiptScanner : AppCompatActivity() {
 
             override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                 val savedUri = output.savedUri ?: Uri.fromFile(File(name))
+                Toast.makeText(baseContext, "Photo saved: $savedUri", Toast.LENGTH_SHORT).show()
+
+                // Prepare input image for Firebase Cloud Vision
+                val image: Bitmap = MediaStore.Images.Media.getBitmap(contentResolver, savedUri)
+
+                // Call Firebase Cloud Vision
+                //callCloudVision(image)
+
+                // Return to main activity
+                finish()
+
                 Log.d(TAG, "Photo capture succeeded: $savedUri")
             }
         })
     }
 
-    // Function to take a video
-    private fun captureVideo(){}
+    private fun callCloudVision(image: Bitmap): Task<String> {
+        return functions
+            .getHttpsCallable("callCloudVision")
+            .call(image)
+            .continueWith { task ->
+                val result = task.result?.data as String
+                Log.d(TAG, result)
+                result
+            }
+    }
 
     // Function to check if all permissions are granted
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
@@ -169,11 +185,69 @@ class ReceiptScanner : AppCompatActivity() {
         }
     }
 
-    // Function to stop camera
-    override fun onDestroy() {
-        super.onDestroy()
-        cameraExecutor.shutdown()
+    /*// Function to scale down bitmap
+    private fun scaleBitmapDown(bitmap: Bitmap, maxDimension: Int): Bitmap {
+        val originalWidth = bitmap.width
+        val originalHeight = bitmap.height
+        var resizedWidth = maxDimension
+        var resizedHeight = maxDimension
+        if (originalHeight > originalWidth) {
+            resizedHeight = maxDimension
+            resizedWidth =
+                (resizedHeight * originalWidth.toFloat() / originalHeight.toFloat()).toInt()
+        } else if (originalWidth > originalHeight) {
+            resizedWidth = maxDimension
+            resizedHeight =
+                (resizedWidth * originalHeight.toFloat() / originalWidth.toFloat()).toInt()
+        } else if (originalHeight == originalWidth) {
+            resizedHeight = maxDimension
+            resizedWidth = maxDimension
+        }
+        return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false)
     }
+
+    // Function to convert bitmap to base64 string
+    private fun bitmapToBase64(bitmap: Bitmap): String {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+        val byteArray: ByteArray = byteArrayOutputStream.toByteArray()
+        return encodeToString(byteArray, DEFAULT)
+    }
+
+    // Function to create a JSON request
+    private fun createJsonRequest(base64: String): JsonObject {
+        // Create json request to cloud vision
+        val request = JsonObject()
+// Add image to request
+        val image = JsonObject()
+        image.add("content", JsonPrimitive(base64))
+        request.add("image", image)
+//Add features to the request
+        val feature = JsonObject()
+        feature.add("type", JsonPrimitive("TEXT_DETECTION"))
+// Alternatively, for DOCUMENT_TEXT_DETECTION:
+// feature.add("type", JsonPrimitive("DOCUMENT_TEXT_DETECTION"))
+        val features = JsonArray()
+        features.add(feature)
+        request.add("features", features)
+
+        return request
+    }
+
+    // Function to call Firebase Cloud Vision
+    private fun annotateImage(requestJson: JsonObject): Task<JsonElement> {
+        return functions
+            .getHttpsCallable("annotateImage")
+            .call(requestJson)
+            .continueWith { task ->
+                // This continuation runs on either success or failure, but if the task
+                // has failed then result will throw an Exception which will be
+                // propagated down.
+                val result = task.result?.data
+                JsonParser.parseString(Gson().toJson(result))
+
+            }
+    }*/
 
     companion object {
         private const val TAG = "Receipt Scanner"
