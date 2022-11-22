@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -19,14 +18,16 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Use Jetpack Navigation to navigate to the MainFragment
         setContentView(R.layout.activity_main)
+
 
         // Action bar title
         supportActionBar?.title = "Home"
 
-        // UI elements
-        val welcomeText = findViewById<TextView>(R.id.test)
-        val fab_newScan = findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab_new_scan)
+        // UI elements from fragment_main.xml
+        //val testText = findViewById<TextView>(R.id.receiptText)
+        //val fabNewScan = findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.floatingActionButton)
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance()
@@ -47,15 +48,15 @@ class MainActivity : AppCompatActivity() {
             userRef.get().addOnSuccessListener { snapshot ->
                 val firstName = snapshot.child("firstName").value.toString()
                 val lastName = snapshot.child("lastName").value.toString()
-                welcomeText.text = "Welcome $firstName $lastName"
+                //testText.text = "Welcome $firstName $lastName"
             }
         }
 
-        // Go to Receipt Scanner
-        fab_newScan.setOnClickListener {
+        /*// Go to Receipt Scanner
+        fabNewScan.setOnClickListener {
             val intent = Intent(this@MainActivity, ReceiptScanner::class.java)
             startActivity(intent)
-        }
+        }*/
     }
 
     // User menu inflater

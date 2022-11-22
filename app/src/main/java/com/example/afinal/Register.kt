@@ -1,10 +1,11 @@
 package com.example.afinal
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.example.afinal.data.UserEntity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 
@@ -69,7 +70,7 @@ class Register : AppCompatActivity() {
                         Toast.makeText(this, "Registration Successful", Toast.LENGTH_SHORT).show()
 
                         // Initialize User
-                        val user = User(firstNameText, middleNameText, lastNameText, emailText, phoneText, addressLine1Text, addressLine2Text, cityText, stateText, zipText)
+                        val user = UserEntity(firstNameText, middleNameText, lastNameText, emailText, phoneText, addressLine1Text, addressLine2Text, cityText, stateText, zipText)
 
                         // Add user to database under uid
                         val uid = mAuth!!.currentUser!!.uid

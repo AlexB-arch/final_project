@@ -8,6 +8,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Base64.DEFAULT
+import android.util.Base64.encodeToString
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast
@@ -22,10 +24,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.tasks.Task
 import com.google.firebase.functions.FirebaseFunctions
+import com.google.gson.*
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.ExecutorService
 
 typealias LumaListener = (luma: Double) -> Unit
 
@@ -33,8 +36,6 @@ class ReceiptScanner : AppCompatActivity() {
 
     // Class variables
     private var imageCapture: ImageCapture? = null
-
-    private lateinit var cameraExecutor: ExecutorService
 
     // Firebase Functions
     private lateinit var functions: FirebaseFunctions
@@ -50,7 +51,7 @@ class ReceiptScanner : AppCompatActivity() {
         val buttonPhoto = findViewById<Button>(R.id.button_capture_photo)
 
         // Initialize device's camera
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        ProcessCameraProvider.getInstance(this)
 
         // Initialize Firebase Functions
         functions = FirebaseFunctions.getInstance()
@@ -140,7 +141,10 @@ class ReceiptScanner : AppCompatActivity() {
                 val image: Bitmap = MediaStore.Images.Media.getBitmap(contentResolver, savedUri)
 
                 // Call Firebase Cloud Vision
-                //callCloudVision(image)
+                callCloudVision(image)
+
+                // Test json output
+
 
                 // Return to main activity
                 finish()
@@ -185,7 +189,7 @@ class ReceiptScanner : AppCompatActivity() {
         }
     }
 
-    /*// Function to scale down bitmap
+    // Function to scale down bitmap
     private fun scaleBitmapDown(bitmap: Bitmap, maxDimension: Int): Bitmap {
         val originalWidth = bitmap.width
         val originalHeight = bitmap.height
@@ -218,15 +222,15 @@ class ReceiptScanner : AppCompatActivity() {
     private fun createJsonRequest(base64: String): JsonObject {
         // Create json request to cloud vision
         val request = JsonObject()
-// Add image to request
+        // Add image to request
         val image = JsonObject()
         image.add("content", JsonPrimitive(base64))
         request.add("image", image)
-//Add features to the request
+        //Add features to the request
         val feature = JsonObject()
         feature.add("type", JsonPrimitive("TEXT_DETECTION"))
-// Alternatively, for DOCUMENT_TEXT_DETECTION:
-// feature.add("type", JsonPrimitive("DOCUMENT_TEXT_DETECTION"))
+        // Alternatively, for DOCUMENT_TEXT_DETECTION:
+        // feature.add("type", JsonPrimitive("DOCUMENT_TEXT_DETECTION"))
         val features = JsonArray()
         features.add(feature)
         request.add("features", features)
@@ -245,14 +249,6 @@ class ReceiptScanner : AppCompatActivity() {
                 // propagated down.
                 val result = task.result?.data
                 JsonParser.parseString(Gson().toJson(result))
-
             }
-    }*/
-
-    companion object {
-        private const val TAG = "Receipt Scanner"
-        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
-        private const val REQUEST_CODE_PERMISSIONS = 10
-        private val REQUIRED_PERMISSIONS = mutableListOf(android.Manifest.permission.CAMERA).toTypedArray()
     }
 }
