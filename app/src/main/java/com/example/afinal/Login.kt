@@ -8,7 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 
-class Login : AppCompatActivity() {
+class Login: AppCompatActivity() {
 
     // Firebase Authentication
     private var mAuth: FirebaseAuth? = null
