@@ -1,15 +1,14 @@
 package com.example.afinal
 
+import android.app.Activity
 import android.content.ContentValues
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Base64.DEFAULT
-import android.util.Base64.encodeToString
 import android.util.Log
 import android.widget.Button
 import android.widget.Toast
@@ -22,23 +21,21 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.gms.tasks.Task
-import com.google.firebase.functions.FirebaseFunctions
-import com.google.gson.*
-import java.io.ByteArrayOutputStream
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
-typealias LumaListener = (luma: Double) -> Unit
 
 class ReceiptScanner : AppCompatActivity() {
 
     // Class variables
     private var imageCapture: ImageCapture? = null
+    private lateinit var cameraExecutor: ExecutorService
+    private lateinit var buttonPhoto: Button
 
-    // Firebase Functions
-    private lateinit var functions: FirebaseFunctions
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,8 +50,8 @@ class ReceiptScanner : AppCompatActivity() {
         // Initialize device's camera
         ProcessCameraProvider.getInstance(this)
 
-        // Initialize Firebase Functions
-        functions = FirebaseFunctions.getInstance()
+        // Initialize camera executor
+        cameraExecutor = Executors.newSingleThreadExecutor()
 
         // Get camera permissions
         if (allPermissionsGranted()) {
@@ -67,6 +64,20 @@ class ReceiptScanner : AppCompatActivity() {
 
         // Add a listener to the Capture button
         buttonPhoto.setOnClickListener { takePhoto() }
+    }
+
+    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+            val result = CropImage.getActivityResult(data)
+
+            if (resultCode == Activity.RESULT_OK) {
+                val imageUri = result.uri
+                analyzeImage(MediaStore.Images.Media.getBitmap(contentResolver, imageUri))
+            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                Toast.makeText(this, "There was some error : ${result.error.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     // Function to start camera
@@ -87,11 +98,11 @@ class ReceiptScanner : AppCompatActivity() {
                     it.setSurfaceProvider(scannerPreview.surfaceProvider)
                 }
 
+            imageCapture = ImageCapture.Builder()
+                .build()
+
             // Select back camera as a default
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-            // Capture image
-            imageCapture = ImageCapture.Builder().build()
 
             try {
                 // Unbind use cases before rebinding
@@ -119,9 +130,7 @@ class ReceiptScanner : AppCompatActivity() {
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
-            }
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
         }
 
         // Create output options object which contains file + metadata
@@ -137,32 +146,11 @@ class ReceiptScanner : AppCompatActivity() {
                 val savedUri = output.savedUri ?: Uri.fromFile(File(name))
                 Toast.makeText(baseContext, "Photo saved: $savedUri", Toast.LENGTH_SHORT).show()
 
-                // Prepare input image for Firebase Cloud Vision
-                val image: Bitmap = MediaStore.Images.Media.getBitmap(contentResolver, savedUri)
-
-                // Call Firebase Cloud Vision
-                callCloudVision(image)
-
-                // Test json output
-
-
-                // Return to main activity
                 finish()
 
                 Log.d(TAG, "Photo capture succeeded: $savedUri")
             }
         })
-    }
-
-    private fun callCloudVision(image: Bitmap): Task<String> {
-        return functions
-            .getHttpsCallable("callCloudVision")
-            .call(image)
-            .continueWith { task ->
-                val result = task.result?.data as String
-                Log.d(TAG, result)
-                result
-            }
     }
 
     // Function to check if all permissions are granted
@@ -189,66 +177,66 @@ class ReceiptScanner : AppCompatActivity() {
         }
     }
 
-    // Function to scale down bitmap
-    private fun scaleBitmapDown(bitmap: Bitmap, maxDimension: Int): Bitmap {
-        val originalWidth = bitmap.width
-        val originalHeight = bitmap.height
-        var resizedWidth = maxDimension
-        var resizedHeight = maxDimension
-        if (originalHeight > originalWidth) {
-            resizedHeight = maxDimension
-            resizedWidth =
-                (resizedHeight * originalWidth.toFloat() / originalHeight.toFloat()).toInt()
-        } else if (originalWidth > originalHeight) {
-            resizedWidth = maxDimension
-            resizedHeight =
-                (resizedWidth * originalHeight.toFloat() / originalWidth.toFloat()).toInt()
-        } else if (originalHeight == originalWidth) {
-            resizedHeight = maxDimension
-            resizedWidth = maxDimension
+    // Function to stop camera executor
+    override fun onDestroy() {
+        super.onDestroy()
+        cameraExecutor.shutdown()
+    }
+
+    private fun analyzeImage(image: Bitmap?) {
+        if (image == null) {
+            Toast.makeText(this, "There was some error", Toast.LENGTH_SHORT).show()
+            return
         }
-        return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false)
-    }
 
-    // Function to convert bitmap to base64 string
-    private fun bitmapToBase64(bitmap: Bitmap): String {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
-        val byteArray: ByteArray = byteArrayOutputStream.toByteArray()
-        return encodeToString(byteArray, DEFAULT)
-    }
+        imageView.setImageBitmap(null)
+        textRecognitionModels.clear()
+        bottomSheetRecyclerView.adapter?.notifyDataSetChanged()
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        showProgress()
 
-    // Function to create a JSON request
-    private fun createJsonRequest(base64: String): JsonObject {
-        // Create json request to cloud vision
-        val request = JsonObject()
-        // Add image to request
-        val image = JsonObject()
-        image.add("content", JsonPrimitive(base64))
-        request.add("image", image)
-        //Add features to the request
-        val feature = JsonObject()
-        feature.add("type", JsonPrimitive("TEXT_DETECTION"))
-        // Alternatively, for DOCUMENT_TEXT_DETECTION:
-        // feature.add("type", JsonPrimitive("DOCUMENT_TEXT_DETECTION"))
-        val features = JsonArray()
-        features.add(feature)
-        request.add("features", features)
+        val firebaseVisionImage = FirebaseVisionImage.fromBitmap(image)
+        val textRecognizer = FirebaseVision.getInstance().onDeviceTextRecognizer
+        textRecognizer.processImage(firebaseVisionImage)
+            .addOnSuccessListener {
+                val mutableImage = image.copy(Bitmap.Config.ARGB_8888, true)
 
-        return request
-    }
+                recognizeText(it, mutableImage)
 
-    // Function to call Firebase Cloud Vision
-    private fun annotateImage(requestJson: JsonObject): Task<JsonElement> {
-        return functions
-            .getHttpsCallable("annotateImage")
-            .call(requestJson)
-            .continueWith { task ->
-                // This continuation runs on either success or failure, but if the task
-                // has failed then result will throw an Exception which will be
-                // propagated down.
-                val result = task.result?.data
-                JsonParser.parseString(Gson().toJson(result))
+                imageView.setImageBitmap(mutableImage)
+                hideProgress()
+                bottomSheetRecyclerView.adapter?.notifyDataSetChanged()
+                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
             }
+            .addOnFailureListener {
+                Toast.makeText(this, "There was some error", Toast.LENGTH_SHORT).show()
+                hideProgress()
+            }
+    }
+
+    private fun recognizeText(result: FirebaseVisionText?, image: Bitmap?) {
+        if (result == null || image == null) {
+            Toast.makeText(this, "There was some error", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val canvas = Canvas(image)
+        val rectPaint = Paint()
+        rectPaint.color = Color.RED
+        rectPaint.style = Paint.Style.STROKE
+        rectPaint.strokeWidth = 4F
+        val textPaint = Paint()
+        textPaint.color = Color.RED
+        textPaint.textSize = 40F
+
+        var index = 0
+        for (block in result.textBlocks) {
+            for (line in block.lines) {
+
+                canvas.drawRect(line.boundingBox, rectPaint)
+                canvas.drawText(index.toString(), line.cornerPoints!![2].x.toFloat(), line.cornerPoints!![2].y.toFloat(), textPaint)
+                textRecognitionModels.add(TextRecognitionModel(index++, line.text))
+            }
+        }
     }
 }
