@@ -1,6 +1,6 @@
 package com.example.afinal
 
-import android.content.Intent
+/*import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -53,12 +53,12 @@ class CameraXLivePreviewActivity : AppCompatActivity(), OnItemSelectedListener, 
             Log.d(TAG, "previewView is null")
         }
 
-        graphicOverlay = findViewById(R.id.scanner_overlay)
+        graphicOverlay = findViewById(R.id.)
         if (graphicOverlay == null) {
             Log.d(TAG, "graphicOverlay is null")
         }
 
-        val spinner = findViewById<Spinner>(R.id.spinner)
+        //val spinner = findViewById<Spinner>(R.id.spinner)
         val options: MutableList<String> = ArrayList()
         options.add(TEXT_RECOGNITION)
 
@@ -69,14 +69,13 @@ class CameraXLivePreviewActivity : AppCompatActivity(), OnItemSelectedListener, 
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
 
         // Attaching data adapter to spinner
-        spinner.adapter = dataAdapter
-        spinner.onItemSelectedListener = this
-        val facingSwitch = findViewById<ToggleButton>(R.id.facing_switch)
-        facingSwitch.setOnCheckedChangeListener(this)
+        //spinner.adapter = dataAdapter
+        //spinner.onItemSelectedListener = this
+        //val facingSwitch = findViewById<ToggleButton>(R.id.facing_switch)
+        //facingSwitch.setOnCheckedChangeListener(this)
 
         // Set the view model provider
-        ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(application))
-            .get(CameraXViewModel::class.java)
+        ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(application))[CameraXViewModel::class.java]
             .processCameraProvider
             .observe(this, Observer { provider: ProcessCameraProvider? ->
                 cameraProvider = provider
@@ -85,7 +84,8 @@ class CameraXLivePreviewActivity : AppCompatActivity(), OnItemSelectedListener, 
     }
 
     override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-        TODO("Not yet implemented")
+        selectedModel = parent?.getItemAtPosition(position).toString()
+        bindAnalysisUseCase()
     }
 
     override fun onNothingSelected(parent: AdapterView<*>?) {
@@ -194,34 +194,6 @@ class CameraXLivePreviewActivity : AppCompatActivity(), OnItemSelectedListener, 
         imageProcessor =
             try {
                 when (selectedModel) {
-                    /*OBJECT_DETECTION -> {
-                        Log.i(TAG, "Using Object Detector Processor")
-
-                        val objectDetectorOptions = PreferenceUtils.getObjectDetectorOptionsForLivePreview(this)
-                        ObjectDetectorProcessor(this, objectDetectorOptions)
-                    }
-                    OBJECT_DETECTION_CUSTOM -> {
-                        Log.i(TAG, "Using Custom Object Detector (with object labeler) Processor")
-                        val localModel =
-                            LocalModel.Builder().setAssetFilePath("custom_models/object_labeler.tflite").build()
-                        val customObjectDetectorOptions =
-                            PreferenceUtils.getCustomObjectDetectorOptionsForLivePreview(this, localModel)
-                        ObjectDetectorProcessor(this, customObjectDetectorOptions)
-                    }
-                    AUTOML_OBJECT_DETECTION -> {
-                        AutoMLObjectDetectionProcessor(this)
-                    }
-                    AUTOML_OBJECT_DETECTION_CUSTOM -> {
-                        Log.i(TAG, "Using Custom AutoML Object Detector Processor")
-                        val customAutoMLODTLocalModel =
-                            LocalModel.Builder().setAssetManifestFilePath("automl/manifest.json").build()
-                        val customAutoMLODTOptions =
-                            PreferenceUtils.getCustomObjectDetectorOptionsForLivePreview(
-                                this,
-                                customAutoMLODTLocalModel
-                            )
-                        ObjectDetectorProcessor(this, customAutoMLODTOptions)
-                    }*/
                     TEXT_RECOGNITION -> {
                         Log.i(TAG, "Using on-device Text recognition Processor")
                         TextRecognitionProcessor(this, TextRecognizerOptions.Builder().build())
@@ -252,30 +224,39 @@ class CameraXLivePreviewActivity : AppCompatActivity(), OnItemSelectedListener, 
         needUpdateGraphicOverlayImageSourceInfo = true
 
         analysisUseCase?.setAnalyzer(
-            ContextCompat.getMainExecutor(this),
-            ImageAnalysis.Analyzer { imageProxy: ImageProxy ->
-                if (needUpdateGraphicOverlayImageSourceInfo) {
-                    val isImageFlipped = lensFacing == CameraSelector.LENS_FACING_FRONT
-                    val rotationDegrees = imageProxy.imageInfo.rotationDegrees
-                    if (rotationDegrees == 0 || rotationDegrees == 180) {
-                        graphicOverlay!!.setImageSourceInfo(imageProxy.width, imageProxy.height, isImageFlipped)
-                    } else {
-                        graphicOverlay!!.setImageSourceInfo(imageProxy.height, imageProxy.width, isImageFlipped)
-                    }
-                    needUpdateGraphicOverlayImageSourceInfo = false
+            ContextCompat.getMainExecutor(this)
+        ) { imageProxy: ImageProxy ->
+            if (needUpdateGraphicOverlayImageSourceInfo) {
+                val isImageFlipped = lensFacing == CameraSelector.LENS_FACING_FRONT
+                val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+                if (rotationDegrees == 0 || rotationDegrees == 180) {
+                    graphicOverlay!!.setImageSourceInfo(
+                        imageProxy.width,
+                        imageProxy.height,
+                        isImageFlipped
+                    )
+                } else {
+                    graphicOverlay!!.setImageSourceInfo(
+                        imageProxy.height,
+                        imageProxy.width,
+                        isImageFlipped
+                    )
                 }
-                try {
-                    imageProcessor!!.processImageProxy(imageProxy, graphicOverlay)
-                } catch (e: MlKitException) {
-                    Log.e(TAG, "Failed to process image. Error: " + e.localizedMessage)
-                    Toast.makeText(
-                        applicationContext,
-                        e.localizedMessage,
-                        Toast.LENGTH_SHORT)
-                        .show()
-                }
+                needUpdateGraphicOverlayImageSourceInfo = false
             }
-        )
+            try {
+                imageProcessor!!.processImageProxy(imageProxy, graphicOverlay)
+            } catch (e: MlKitException) {
+                Log.e(TAG, "Failed to process image. Error: " + e.localizedMessage)
+                Toast.makeText(
+                    applicationContext,
+                    e.localizedMessage,
+                    Toast.LENGTH_SHORT
+                )
+                    .show()
+            }
+        }
         cameraProvider!!.bindToLifecycle(this, cameraSelector!!, analysisUseCase)
     }
 }
+*/

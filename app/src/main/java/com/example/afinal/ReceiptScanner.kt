@@ -1,10 +1,7 @@
 package com.example.afinal
 
-import android.app.Activity
 import android.content.ContentValues
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -13,15 +10,13 @@ import android.util.Log
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.mlkit.common.MlKitException
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -32,9 +27,18 @@ import java.util.concurrent.Executors
 class ReceiptScanner : AppCompatActivity() {
 
     // Class variables
+    private var scannerPreview: PreviewView? = null
     private var imageCapture: ImageCapture? = null
     private lateinit var cameraExecutor: ExecutorService
+    private var graphicOverlay: GraphicOverlay? = null
+    private var imageProcessor: VisionImageProcessor? = null
+    private var cameraProvider: ProcessCameraProvider? = null
+    private var analysisUseCase: ImageAnalysis? = null
+    private var previewUseCase: Preview? = null
+    private var cameraSelector: CameraSelector? = null
+    private var lensFacing = CameraSelector.LENS_FACING_BACK
     private lateinit var buttonPhoto: Button
+    private var needUpdateGraphicOverlayImageSourceInfo = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,27 +70,13 @@ class ReceiptScanner : AppCompatActivity() {
         buttonPhoto.setOnClickListener { takePhoto() }
     }
 
-    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
-            val result = CropImage.getActivityResult(data)
-
-            if (resultCode == Activity.RESULT_OK) {
-                val imageUri = result.uri
-                analyzeImage(MediaStore.Images.Media.getBitmap(contentResolver, imageUri))
-            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
-                Toast.makeText(this, "There was some error : ${result.error.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
     // Function to start camera
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         cameraProviderFuture.addListener(Runnable {
             // UI element for camera preview
-            val scannerPreview = findViewById<PreviewView>(R.id.scanner_viewfinder)
+            scannerPreview = findViewById(R.id.scanner_viewfinder)
 
             // Used to bind the lifecycle of cameras to the lifecycle owner
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
@@ -95,7 +85,7 @@ class ReceiptScanner : AppCompatActivity() {
             val preview = Preview.Builder()
                 .build()
                 .also {
-                    it.setSurfaceProvider(scannerPreview.surfaceProvider)
+                    it.setSurfaceProvider(scannerPreview?.surfaceProvider)
                 }
 
             imageCapture = ImageCapture.Builder()
@@ -183,60 +173,101 @@ class ReceiptScanner : AppCompatActivity() {
         cameraExecutor.shutdown()
     }
 
-    private fun analyzeImage(image: Bitmap?) {
-        if (image == null) {
-            Toast.makeText(this, "There was some error", Toast.LENGTH_SHORT).show()
-            return
+    private fun bindAllCameraUseCases() {
+        if (cameraProvider != null) {
+            // As required by CameraX API, unbinds all use cases before trying to re-bind any of them.
+            cameraProvider!!.unbindAll()
+            bindPreviewUseCase()
+            bindAnalysisUseCase()
         }
-
-        imageView.setImageBitmap(null)
-        textRecognitionModels.clear()
-        bottomSheetRecyclerView.adapter?.notifyDataSetChanged()
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-        showProgress()
-
-        val firebaseVisionImage = FirebaseVisionImage.fromBitmap(image)
-        val textRecognizer = FirebaseVision.getInstance().onDeviceTextRecognizer
-        textRecognizer.processImage(firebaseVisionImage)
-            .addOnSuccessListener {
-                val mutableImage = image.copy(Bitmap.Config.ARGB_8888, true)
-
-                recognizeText(it, mutableImage)
-
-                imageView.setImageBitmap(mutableImage)
-                hideProgress()
-                bottomSheetRecyclerView.adapter?.notifyDataSetChanged()
-                bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "There was some error", Toast.LENGTH_SHORT).show()
-                hideProgress()
-            }
     }
 
-    private fun recognizeText(result: FirebaseVisionText?, image: Bitmap?) {
-        if (result == null || image == null) {
-            Toast.makeText(this, "There was some error", Toast.LENGTH_SHORT).show()
+    private fun bindPreviewUseCase() {
+        if (!PreferenceUtils.isCameraLiveViewportEnabled(this)) {
             return
         }
+        if (cameraProvider == null) {
+            return
+        }
+        if (previewUseCase != null) {
+            cameraProvider!!.unbind(previewUseCase)
+        }
 
-        val canvas = Canvas(image)
-        val rectPaint = Paint()
-        rectPaint.color = Color.RED
-        rectPaint.style = Paint.Style.STROKE
-        rectPaint.strokeWidth = 4F
-        val textPaint = Paint()
-        textPaint.color = Color.RED
-        textPaint.textSize = 40F
+        val builder = Preview.Builder()
+        val targetResolution = PreferenceUtils.getCameraXTargetResolution(this, lensFacing)
+        if (targetResolution != null) {
+            builder.setTargetResolution(targetResolution)
+        }
+        previewUseCase = builder.build()
+        previewUseCase!!.setSurfaceProvider(scannerPreview?.surfaceProvider)
+        cameraProvider!!.bindToLifecycle(this, cameraSelector!!, previewUseCase)
+    }
 
-        var index = 0
-        for (block in result.textBlocks) {
-            for (line in block.lines) {
+    private fun bindAnalysisUseCase() {
+        if (cameraProvider == null) {
+            return
+        }
+        if (analysisUseCase != null) {
+            cameraProvider!!.unbind(analysisUseCase)
+        }
+        if (imageProcessor != null) {
+            imageProcessor!!.stop()
+        }
 
-                canvas.drawRect(line.boundingBox, rectPaint)
-                canvas.drawText(index.toString(), line.cornerPoints!![2].x.toFloat(), line.cornerPoints!![2].y.toFloat(), textPaint)
-                textRecognitionModels.add(TextRecognitionModel(index++, line.text))
+        imageProcessor =
+            try {
+                TextRecognitionProcessor(this, TextRecognizerOptions.Builder().build())
+            } catch (e: Exception) {
+                Log.e(TAG, "Can not create image processor: $e")
+                Toast.makeText(
+                    applicationContext, "Can not create image processor: " + e.message,
+                    Toast.LENGTH_LONG
+                ).show()
+                return
+        }
+
+        val builder = ImageAnalysis.Builder()
+
+        analysisUseCase = builder.build()
+
+        needUpdateGraphicOverlayImageSourceInfo = true
+
+        analysisUseCase?.setAnalyzer(
+            // imageProcessor.processImageProxy will use another thread to run the detection underneath,
+            // thus we can just runs the analyzer itself on main thread.
+            ContextCompat.getMainExecutor(this)
+        ) { imageProxy: ImageProxy ->
+            if (needUpdateGraphicOverlayImageSourceInfo) {
+                val isImageFlipped = lensFacing == CameraSelector.LENS_FACING_FRONT
+                val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+                if (rotationDegrees == 0 || rotationDegrees == 180) {
+                    graphicOverlay!!.setImageSourceInfo(
+                        imageProxy.width,
+                        imageProxy.height,
+                        isImageFlipped
+                    )
+                } else {
+                    graphicOverlay!!.setImageSourceInfo(
+                        imageProxy.height,
+                        imageProxy.width,
+                        isImageFlipped
+                    )
+                }
+                needUpdateGraphicOverlayImageSourceInfo = false
+            }
+            try {
+                imageProcessor!!.processImageProxy(imageProxy, graphicOverlay)
+            } catch (e: MlKitException) {
+                Log.e(TAG, "Failed to process image. Error: " + e.localizedMessage)
+                Toast.makeText(applicationContext, e.localizedMessage, Toast.LENGTH_SHORT).show()
             }
         }
+        cameraProvider!!.bindToLifecycle(this, cameraSelector!!, analysisUseCase)
+    }
+
+    companion object {
+        private const val TAG = "CameraXBasic"
+        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
+        private const val REQUEST_CODE_PERMISSIONS = 10
     }
 }
