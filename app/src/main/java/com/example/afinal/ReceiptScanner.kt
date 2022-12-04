@@ -1,7 +1,10 @@
 package com.example.afinal
 
+import android.app.Activity
 import android.content.ContentValues
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -15,7 +18,8 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.mlkit.common.MlKitException
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.File
 import java.text.SimpleDateFormat
@@ -24,21 +28,13 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 
-class ReceiptScanner : AppCompatActivity() {
+@ExperimentalGetImage class ReceiptScanner : AppCompatActivity() {
 
     // Class variables
-    private var scannerPreview: PreviewView? = null
     private var imageCapture: ImageCapture? = null
     private lateinit var cameraExecutor: ExecutorService
-    private var graphicOverlay: GraphicOverlay? = null
-    private var imageProcessor: VisionImageProcessor? = null
-    private var cameraProvider: ProcessCameraProvider? = null
-    private var analysisUseCase: ImageAnalysis? = null
-    private var previewUseCase: Preview? = null
-    private var cameraSelector: CameraSelector? = null
-    private var lensFacing = CameraSelector.LENS_FACING_BACK
     private lateinit var buttonPhoto: Button
-    private var needUpdateGraphicOverlayImageSourceInfo = false
+    private var bitmap: Bitmap? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,7 +72,7 @@ class ReceiptScanner : AppCompatActivity() {
 
         cameraProviderFuture.addListener(Runnable {
             // UI element for camera preview
-            scannerPreview = findViewById(R.id.scanner_viewfinder)
+            val scannerPreview = findViewById<PreviewView>(R.id.scanner_viewfinder)
 
             // Used to bind the lifecycle of cameras to the lifecycle owner
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
@@ -85,7 +81,7 @@ class ReceiptScanner : AppCompatActivity() {
             val preview = Preview.Builder()
                 .build()
                 .also {
-                    it.setSurfaceProvider(scannerPreview?.surfaceProvider)
+                    it.setSurfaceProvider(scannerPreview.surfaceProvider)
                 }
 
             imageCapture = ImageCapture.Builder()
@@ -173,101 +169,36 @@ class ReceiptScanner : AppCompatActivity() {
         cameraExecutor.shutdown()
     }
 
-    private fun bindAllCameraUseCases() {
-        if (cameraProvider != null) {
-            // As required by CameraX API, unbinds all use cases before trying to re-bind any of them.
-            cameraProvider!!.unbindAll()
-            bindPreviewUseCase()
-            bindAnalysisUseCase()
-        }
-    }
+    // Method to detect text from image
+    fun detectText(uri: Uri) {
+        val image = InputImage.fromFilePath(this, uri)
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
-    private fun bindPreviewUseCase() {
-        if (!PreferenceUtils.isCameraLiveViewportEnabled(this)) {
-            return
-        }
-        if (cameraProvider == null) {
-            return
-        }
-        if (previewUseCase != null) {
-            cameraProvider!!.unbind(previewUseCase)
-        }
-
-        val builder = Preview.Builder()
-        val targetResolution = PreferenceUtils.getCameraXTargetResolution(this, lensFacing)
-        if (targetResolution != null) {
-            builder.setTargetResolution(targetResolution)
-        }
-        previewUseCase = builder.build()
-        previewUseCase!!.setSurfaceProvider(scannerPreview?.surfaceProvider)
-        cameraProvider!!.bindToLifecycle(this, cameraSelector!!, previewUseCase)
-    }
-
-    private fun bindAnalysisUseCase() {
-        if (cameraProvider == null) {
-            return
-        }
-        if (analysisUseCase != null) {
-            cameraProvider!!.unbind(analysisUseCase)
-        }
-        if (imageProcessor != null) {
-            imageProcessor!!.stop()
-        }
-
-        imageProcessor =
-            try {
-                TextRecognitionProcessor(this, TextRecognizerOptions.Builder().build())
-            } catch (e: Exception) {
-                Log.e(TAG, "Can not create image processor: $e")
-                Toast.makeText(
-                    applicationContext, "Can not create image processor: " + e.message,
-                    Toast.LENGTH_LONG
-                ).show()
-                return
-        }
-
-        val builder = ImageAnalysis.Builder()
-
-        analysisUseCase = builder.build()
-
-        needUpdateGraphicOverlayImageSourceInfo = true
-
-        analysisUseCase?.setAnalyzer(
-            // imageProcessor.processImageProxy will use another thread to run the detection underneath,
-            // thus we can just runs the analyzer itself on main thread.
-            ContextCompat.getMainExecutor(this)
-        ) { imageProxy: ImageProxy ->
-            if (needUpdateGraphicOverlayImageSourceInfo) {
-                val isImageFlipped = lensFacing == CameraSelector.LENS_FACING_FRONT
-                val rotationDegrees = imageProxy.imageInfo.rotationDegrees
-                if (rotationDegrees == 0 || rotationDegrees == 180) {
-                    graphicOverlay!!.setImageSourceInfo(
-                        imageProxy.width,
-                        imageProxy.height,
-                        isImageFlipped
-                    )
-                } else {
-                    graphicOverlay!!.setImageSourceInfo(
-                        imageProxy.height,
-                        imageProxy.width,
-                        isImageFlipped
-                    )
+        val result = recognizer.process(image)
+            .addOnSuccessListener { visionText ->
+                val resultText = visionText.text
+                for (block in visionText.textBlocks) {
+                    val blockText = block.text
+                    val blockCornerPoints = block.cornerPoints
+                    val blockFrame = block.boundingBox
+                    for (line in block.lines) {
+                        val lineText = line.text
+                        val lineCornerPoints = line.cornerPoints
+                        val lineFrame = line.boundingBox
+                        for (element in line.elements) {
+                            val elementText = element.text
+                            val elementCornerPoints = element.cornerPoints
+                            val elementFrame = element.boundingBox
+                        }
+                    }
                 }
-                needUpdateGraphicOverlayImageSourceInfo = false
+                Log.d("Text", resultText)
+                val intent = Intent(this, ReceiptViewer::class.java)
+                intent.putExtra("text", resultText)
+                startActivity(intent)
             }
-            try {
-                imageProcessor!!.processImageProxy(imageProxy, graphicOverlay)
-            } catch (e: MlKitException) {
-                Log.e(TAG, "Failed to process image. Error: " + e.localizedMessage)
-                Toast.makeText(applicationContext, e.localizedMessage, Toast.LENGTH_SHORT).show()
+            .addOnFailureListener { e ->
+                Log.d("Error", e.toString())
             }
-        }
-        cameraProvider!!.bindToLifecycle(this, cameraSelector!!, analysisUseCase)
-    }
-
-    companion object {
-        private const val TAG = "CameraXBasic"
-        private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
-        private const val REQUEST_CODE_PERMISSIONS = 10
     }
 }
