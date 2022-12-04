@@ -6,9 +6,10 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.ExperimentalGetImage
 import com.google.firebase.auth.FirebaseAuth
 
-class Login: AppCompatActivity() {
+@ExperimentalGetImage class Login: AppCompatActivity() {
 
     // Firebase Authentication
     private var mAuth: FirebaseAuth? = null

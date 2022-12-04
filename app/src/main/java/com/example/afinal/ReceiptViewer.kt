@@ -25,9 +25,4 @@ class ReceiptViewer : AppCompatActivity() {
         receiptText.text = text
 
     }
-
-    // Method to generate a pdf file
-    private fun generatePDF() {
-
-    }
 }

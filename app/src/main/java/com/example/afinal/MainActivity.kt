@@ -6,11 +6,12 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.ExperimentalGetImage
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 
-class MainActivity : AppCompatActivity() {
+@ExperimentalGetImage class MainActivity : AppCompatActivity() {
 
     // UI elements
     private lateinit var testText: TextView
