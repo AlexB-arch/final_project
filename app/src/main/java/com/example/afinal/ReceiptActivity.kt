@@ -16,7 +16,7 @@ class ReceiptActivity : AppCompatActivity() {
         supportActionBar?.title = "Receipt"
 
         // UI elements
-        val receiptText = findViewById<TextView>(R.id.display_receipt)
+        val receiptText = findViewById<TextView>(R.id.receipt_text)
 
         // Get the text from the intent
         val text = intent.getStringExtra("text")

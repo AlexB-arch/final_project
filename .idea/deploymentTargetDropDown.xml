@@ -15,20 +15,3 @@
     <timeTargetWasSelectedWithDropDown value="2022-12-04T04:28:30.919608500Z" />
   </component>
 </project>
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="deploymentTargetDropDown">
-    <runningDeviceTargetSelectedWithDropDown>
-      <Target>
-        <type value="RUNNING_DEVICE_TARGET" />
-        <deviceKey>
-          <Key>
-            <type value="SERIAL_NUMBER" />
-            <value value="YPU4EEIJ89QORKRK" />
-          </Key>
-        </deviceKey>
-      </Target>
-    </runningDeviceTargetSelectedWithDropDown>
-    <timeTargetWasSelectedWithDropDown value="2022-11-30T07:06:14.744544300Z" />
-  </component>
-</project>
