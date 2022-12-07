@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
-package com.google.mlkit.vision.demo.kotlin
+package com.example.afinal.mlkit.kotlin
 
-import com.google.android.gms.tasks.OnCanceledListener
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
-import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.*
 import java.util.concurrent.Executor
 
 /**

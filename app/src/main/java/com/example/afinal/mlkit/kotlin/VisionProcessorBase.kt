@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.mlkit.vision.demo.kotlin
+package com.example.afinal.mlkit.kotlin
 
 import android.app.ActivityManager
 import android.content.Context
@@ -27,30 +27,19 @@ import androidx.annotation.GuardedBy
 import androidx.annotation.RequiresApi
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageProxy
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
-import com.google.android.gms.tasks.Task
-import com.google.android.gms.tasks.TaskExecutors
-import com.google.android.gms.tasks.Tasks
+import com.example.afinal.mlkit.*
+import com.example.afinal.mlkit.preference.PreferenceUtils
+import com.google.android.gms.tasks.*
 import com.google.android.odml.image.BitmapMlImageBuilder
 import com.google.android.odml.image.ByteBufferMlImageBuilder
 import com.google.android.odml.image.MediaMlImageBuilder
 import com.google.android.odml.image.MlImage
 import com.google.mlkit.common.MlKitException
 import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.demo.BitmapUtils
-import com.google.mlkit.vision.demo.CameraImageGraphic
-import com.google.mlkit.vision.demo.FrameMetadata
-import com.google.mlkit.vision.demo.GraphicOverlay
-import com.google.mlkit.vision.demo.InferenceInfoGraphic
-import com.google.mlkit.vision.demo.ScopedExecutor
-import com.google.mlkit.vision.demo.VisionImageProcessor
-import com.google.mlkit.vision.demo.preference.PreferenceUtils
 import java.lang.Math.max
 import java.lang.Math.min
 import java.nio.ByteBuffer
-import java.util.Timer
-import java.util.TimerTask
+import java.util.*
 
 /**
  * Abstract base class for ML Kit frame processors. Subclasses need to implement {@link
@@ -173,11 +162,11 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
     if (isMlImageEnabled(graphicOverlay.context)) {
       val mlImage =
         ByteBufferMlImageBuilder(
-            data,
-            frameMetadata.width,
-            frameMetadata.height,
-            MlImage.IMAGE_FORMAT_NV21
-          )
+          data,
+          frameMetadata.width,
+          frameMetadata.height,
+          MlImage.IMAGE_FORMAT_NV21
+        )
           .setRotation(frameMetadata.rotation)
           .build()
       requestDetectInImage(mlImage, graphicOverlay, bitmap, /* shouldShowFps= */ true, frameStartMs)
@@ -317,20 +306,20 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
             Log.d(
               TAG,
               "Frame latency: max=" +
-                maxFrameMs +
-                ", min=" +
-                minFrameMs +
-                ", avg=" +
-                totalFrameMs / numRuns
+                      maxFrameMs +
+                      ", min=" +
+                      minFrameMs +
+                      ", avg=" +
+                      totalFrameMs / numRuns
             )
             Log.d(
               TAG,
               "Detector latency: max=" +
-                maxDetectorMs +
-                ", min=" +
-                minDetectorMs +
-                ", avg=" +
-                totalDetectorMs / numRuns
+                      maxDetectorMs +
+                      ", min=" +
+                      minDetectorMs +
+                      ", avg=" +
+                      totalDetectorMs / numRuns
             )
             val mi = ActivityManager.MemoryInfo()
             activityManager.getMemoryInfo(mi)
@@ -362,13 +351,13 @@ abstract class VisionProcessorBase<T>(context: Context) : VisionImageProcessor {
           graphicOverlay.postInvalidate()
           val error = "Failed to process. Error: " + e.localizedMessage
           Toast.makeText(
-              graphicOverlay.context,
-              """
+            graphicOverlay.context,
+            """
           $error
           Cause: ${e.cause}
           """.trimIndent(),
-              Toast.LENGTH_SHORT
-            )
+            Toast.LENGTH_SHORT
+          )
             .show()
           Log.d(TAG, error)
           e.printStackTrace()

@@ -19,10 +19,8 @@ package com.example.afinal.mlkit;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 
-import com.google.mlkit.vision.demo.GraphicOverlay.Graphic;
-
 /** Draw camera image to background. */
-public class CameraImageGraphic extends Graphic {
+public class CameraImageGraphic extends GraphicOverlay.Graphic {
 
   private final Bitmap bitmap;
 

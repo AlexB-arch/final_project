@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package com.google.mlkit.vision.demo.kotlin.textdetector
+package com.example.afinal.mlkit.kotlin.textdetector
 
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.util.Log
-import com.google.mlkit.vision.demo.GraphicOverlay
-import com.google.mlkit.vision.demo.GraphicOverlay.Graphic
+import com.example.afinal.mlkit.GraphicOverlay
 import com.google.mlkit.vision.text.Text
-import java.util.Arrays
+import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
@@ -39,7 +38,7 @@ constructor(
   private val shouldGroupTextInBlocks: Boolean,
   private val showLanguageTag: Boolean,
   private val showConfidence: Boolean
-) : Graphic(overlay) {
+) : GraphicOverlay.Graphic(overlay) {
 
   private val rectPaint: Paint = Paint()
   private val textPaint: Paint
@@ -90,8 +89,8 @@ constructor(
           )
           for (element in line.elements) {
             Log.d(TAG, "Element text is: " + element.text)
-            Log.d(TAG, "Element boundingbox is: " + element.boundingBox)
-            Log.d(TAG, "Element cornerpoint is: " + Arrays.toString(element.cornerPoints))
+            Log.d(TAG, "Element bounding box is: " + element.boundingBox)
+            Log.d(TAG, "Element counterpoint is: " + Arrays.toString(element.cornerPoints))
             Log.d(TAG, "Element language is: " + element.recognizedLanguage)
             Log.d(TAG, "Element confidence is: " + element.confidence)
             Log.d(TAG, "Element angle is: " + element.angle)

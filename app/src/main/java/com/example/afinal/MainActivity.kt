@@ -1,12 +1,17 @@
 package com.example.afinal
 
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.ExperimentalGetImage
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -59,6 +64,10 @@ import com.google.firebase.database.FirebaseDatabase
             }
         }
 
+        if (!allRuntimePermissionsGranted()) {
+            getRuntimePermissions()
+        }
+
         // Go to Receipt Scanner
         fabNewScan.setOnClickListener {
             val intent = Intent(this@MainActivity, ReceiptScanner::class.java)
@@ -86,5 +95,44 @@ import com.google.firebase.database.FirebaseDatabase
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun allRuntimePermissionsGranted(): Boolean {
+        for (permission in REQUIRED_RUNTIME_PERMISSIONS) {
+            permission?.let {
+                if (!isPermissionGranted(this, it)) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+    private fun getRuntimePermissions() {
+        val permissionsToRequest = ArrayList<String>()
+        for (permission in REQUIRED_RUNTIME_PERMISSIONS) {
+            permission?.let {
+                if (!isPermissionGranted(this, it)) {
+                    permissionsToRequest.add(permission)
+                }
+            }
+        }
+        if (permissionsToRequest.isNotEmpty()) {
+            ActivityCompat.requestPermissions(
+                this,
+                permissionsToRequest.toTypedArray(),
+                PERMISSION_REQUESTS
+            )
+        }
+    }
+
+    private fun isPermissionGranted(context: Context, permission: String): Boolean {
+        if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.i(TAG, "Permission granted: $permission")
+            return true
+        }
+        Log.i(TAG, "Permission NOT granted: $permission")
+        return false
     }
 }

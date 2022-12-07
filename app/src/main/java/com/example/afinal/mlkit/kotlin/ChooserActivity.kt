@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package com.google.mlkit.vision.demo.kotlin
+package com.example.afinal.mlkit.kotlin
 
 import android.content.Context
 import android.content.Intent
-import android.os.Build.VERSION
-import android.os.Build.VERSION_CODES
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -29,10 +26,10 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.ArrayAdapter
-import android.widget.ListView
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.google.mlkit.vision.demo.R
+import com.example.afinal.R
 
 /** Demo app chooser which allows you pick from all available testing Activities. */
 class ChooserActivity :
@@ -41,13 +38,6 @@ class ChooserActivity :
     super.onCreate(savedInstanceState)
     Log.d(TAG, "onCreate")
     setContentView(R.layout.activity_chooser)
-
-    // Set up ListView and Adapter
-    val listView = findViewById<ListView>(R.id.test_activity_list_view)
-    val adapter = MyArrayAdapter(this, android.R.layout.simple_list_item_2, CLASSES)
-    adapter.setDescriptionIds(DESCRIPTION_IDS)
-    listView.adapter = adapter
-    listView.onItemClickListener = this
   }
 
   override fun onItemClick(parent: AdapterView<*>?, view: View, position: Int, id: Long) {
@@ -87,30 +77,16 @@ class ChooserActivity :
   companion object {
     private const val TAG = "ChooserActivity"
     private val CLASSES =
-      if (VERSION.SDK_INT < VERSION_CODES.LOLLIPOP)
-        arrayOf<Class<*>>(
-          LivePreviewActivity::class.java,
-          StillImageActivity::class.java,
-        )
-      else
-        arrayOf<Class<*>>(
-          LivePreviewActivity::class.java,
-          StillImageActivity::class.java,
-          CameraXLivePreviewActivity::class.java,
-          CameraXSourceDemoActivity::class.java
-        )
+      arrayOf<Class<*>>(
+        LivePreviewActivity::class.java,
+        //StillImageActivity::class.java,
+        CameraXLivePreviewActivity::class.java,
+      )
     private val DESCRIPTION_IDS =
-      if (VERSION.SDK_INT < VERSION_CODES.LOLLIPOP)
-        intArrayOf(
-          R.string.desc_camera_source_activity,
-          R.string.desc_still_image_activity,
-        )
-      else
-        intArrayOf(
-          R.string.desc_camera_source_activity,
-          R.string.desc_still_image_activity,
-          R.string.desc_camerax_live_preview_activity,
-          R.string.desc_cameraxsource_demo_activity
-        )
+      intArrayOf(
+        R.string.desc_camera_source_activity,
+        R.string.desc_still_image_activity,
+        R.string.desc_camerax_live_preview_activity,
+      )
   }
 }

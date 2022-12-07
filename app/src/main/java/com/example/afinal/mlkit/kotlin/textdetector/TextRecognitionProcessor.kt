@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.google.mlkit.vision.demo.kotlin.textdetector
+package com.example.afinal.mlkit.kotlin.textdetector
 
 import android.content.Context
 import android.util.Log
+import com.example.afinal.mlkit.GraphicOverlay
+import com.example.afinal.mlkit.kotlin.VisionProcessorBase
+import com.example.afinal.mlkit.preference.PreferenceUtils
 import com.google.android.gms.tasks.Task
 import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.demo.GraphicOverlay
-import com.google.mlkit.vision.demo.kotlin.VisionProcessorBase
-import com.google.mlkit.vision.demo.preference.PreferenceUtils
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.TextRecognizer

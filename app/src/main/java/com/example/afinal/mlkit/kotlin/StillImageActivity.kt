@@ -1,4 +1,4 @@
-/*
+package com.example.afinal.mlkit.kotlin/*
  * Copyright 2020 Google LLC. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
 
-package com.google.mlkit.vision.demo.kotlin
+package com.example.afinal.mlkit.kotlin
 
 import android.app.Activity
 import android.content.ContentValues
@@ -24,45 +23,21 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.util.Pair
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewTreeObserver
-import android.widget.AdapterView
+import android.widget.*
 import android.widget.AdapterView.OnItemSelectedListener
-import android.widget.ArrayAdapter
-import android.widget.ImageView
-import android.widget.PopupMenu
-import android.widget.Spinner
-import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.example.afinal.R
+import com.example.afinal.mlkit.GraphicOverlay
+import com.example.afinal.mlkit.VisionImageProcessor
+import com.example.afinal.mlkit.preference.SettingsActivity
 import com.google.android.gms.common.annotation.KeepName
 import com.google.mlkit.common.model.LocalModel
-import com.google.mlkit.vision.demo.BitmapUtils
-import com.google.mlkit.vision.demo.GraphicOverlay
-import com.google.mlkit.vision.demo.R
-import com.google.mlkit.vision.demo.VisionImageProcessor
-import com.google.mlkit.vision.demo.kotlin.barcodescanner.BarcodeScannerProcessor
-import com.google.mlkit.vision.demo.kotlin.facedetector.FaceDetectorProcessor
-import com.google.mlkit.vision.demo.kotlin.labeldetector.LabelDetectorProcessor
-import com.google.mlkit.vision.demo.kotlin.objectdetector.ObjectDetectorProcessor
-import com.google.mlkit.vision.demo.kotlin.posedetector.PoseDetectorProcessor
-import com.google.mlkit.vision.demo.kotlin.segmenter.SegmenterProcessor
-import com.google.mlkit.vision.demo.kotlin.facemeshdetector.FaceMeshDetectorProcessor;
-import com.google.mlkit.vision.demo.kotlin.textdetector.TextRecognitionProcessor
-import com.google.mlkit.vision.demo.preference.PreferenceUtils
-import com.google.mlkit.vision.demo.preference.SettingsActivity
-import com.google.mlkit.vision.demo.preference.SettingsActivity.LaunchSource
-import com.google.mlkit.vision.label.custom.CustomImageLabelerOptions
-import com.google.mlkit.vision.label.defaults.ImageLabelerOptions
-import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
-import com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions
-import com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions
-import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.IOException
-import java.util.ArrayList
 
 /** Activity demonstrating different image detector features with a still image from camera.  */
 @KeepName
@@ -146,7 +121,7 @@ class StillImageActivity : AppCompatActivity() {
         )
       intent.putExtra(
         SettingsActivity.EXTRA_LAUNCH_SOURCE,
-        LaunchSource.STILL_IMAGE
+        SettingsActivity.LaunchSource.STILL_IMAGE
       )
       startActivity(intent)
     }
@@ -176,46 +151,7 @@ class StillImageActivity : AppCompatActivity() {
   private fun populateFeatureSelector() {
     val featureSpinner = findViewById<Spinner>(R.id.feature_selector)
     val options: MutableList<String> = ArrayList()
-    options.add(OBJECT_DETECTION)
-    options.add(OBJECT_DETECTION_CUSTOM)
-    options.add(CUSTOM_AUTOML_OBJECT_DETECTION)
-    options.add(FACE_DETECTION)
-    options.add(BARCODE_SCANNING)
-    options.add(IMAGE_LABELING)
-    options.add(IMAGE_LABELING_CUSTOM)
-    options.add(CUSTOM_AUTOML_LABELING)
-    options.add(POSE_DETECTION)
-    options.add(SELFIE_SEGMENTATION)
     options.add(TEXT_RECOGNITION_LATIN)
-    options.add(TEXT_RECOGNITION_CHINESE)
-    options.add(TEXT_RECOGNITION_DEVANAGARI)
-    options.add(TEXT_RECOGNITION_JAPANESE)
-    options.add(TEXT_RECOGNITION_KOREAN)
-    options.add(FACE_MESH_DETECTION);
-
-    // Creating adapter for featureSpinner
-    val dataAdapter =
-      ArrayAdapter(this, R.layout.spinner_style, options)
-    // Drop down layout style - list view with radio button
-    dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-    // attaching data adapter to spinner
-    featureSpinner.adapter = dataAdapter
-    featureSpinner.onItemSelectedListener = object : OnItemSelectedListener {
-      override fun onItemSelected(
-        parentView: AdapterView<*>,
-        selectedItemView: View?,
-        pos: Int,
-        id: Long
-      ) {
-        if (pos >= 0) {
-          selectedMode = parentView.getItemAtPosition(pos).toString()
-          createImageProcessor()
-          tryReloadAndDetectInImage()
-        }
-      }
-
-      override fun onNothingSelected(arg0: AdapterView<*>?) {}
-    }
   }
 
   private fun populateSizeSelector() {
@@ -576,6 +512,6 @@ class StillImageActivity : AppCompatActivity() {
     private const val KEY_IMAGE_MAX_HEIGHT = "com.google.mlkit.vision.demo.KEY_IMAGE_MAX_HEIGHT"
     private const val KEY_SELECTED_SIZE = "com.google.mlkit.vision.demo.KEY_SELECTED_SIZE"
     private const val REQUEST_IMAGE_CAPTURE = 1001
-    private const val REQUEST_CHOOSE_IMAGE = 1002
-  }
-}
+    private const val REQUEST_CHOOSE_IMAGE = 1002*/
+    }
+ }*/

@@ -1,8 +1,6 @@
 package com.example.afinal
 
 import android.content.ContentValues
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -14,13 +12,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.afinal.mlkit.GraphicOverlay
+import com.example.afinal.mlkit.VisionImageProcessor
+import com.example.afinal.mlkit.kotlin.textdetector.TextRecognitionProcessor
+import com.google.mlkit.common.MlKitException
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 
 @ExperimentalGetImage class ReceiptScanner : AppCompatActivity() {
@@ -28,8 +29,14 @@ import java.util.concurrent.Executors
     // Class variables
     private var imageCapture: ImageCapture? = null
     private lateinit var cameraExecutor: ExecutorService
+    private var cameraProvider: ProcessCameraProvider? = null
     private lateinit var buttonPhoto: Button
     private var scannerPreview: PreviewView? = null
+    private var graphicOverlay: GraphicOverlay? = null
+    private var recognizer : TextRecognitionProcessor? = null
+    private var analyzer : ImageAnalysis? = null
+    private var processor : VisionImageProcessor? = null
+    private var cameraSelector : CameraSelector? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,65 +47,137 @@ import java.util.concurrent.Executors
         supportActionBar?.title = "Receipt Scanner"
 
         // UI elements
+        scannerPreview = findViewById(R.id.scanner_viewfinder)
         val buttonPhoto = findViewById<Button>(R.id.button_capture_photo)
 
-        // Initialize device's camera
-        ProcessCameraProvider.getInstance(this)
-
-        // Initialize camera executor
-        cameraExecutor = Executors.newSingleThreadExecutor()
-
-        // Get camera permissions
-        if (allPermissionsGranted()) {
-            startCamera()
-        } else {
-            ActivityCompat.requestPermissions(
-                this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS
-            )
+        Log.d("ReceiptScanner", "onCreate")
+        // Initialize camera provider
+        ProcessCameraProvider.getInstance(this).also { providerFuture ->
+            providerFuture.addListener({
+                // Camera provider is now guaranteed to be available
+                cameraProvider = providerFuture.get()
+                Log.d("ReceiptScanner", "Camera provider initialized")
+                // Bind the camera use cases
+                bindCamera()
+            }, ContextCompat.getMainExecutor(this))
         }
+
+
+
+        scannerPreview = findViewById(R.id.scanner_viewfinder)
+        if (scannerPreview == null) {
+            Log.d("ReceiptScanner", "Preview is null")
+        }
+
+        graphicOverlay = findViewById(R.id.graphic_overlay)
+        if (graphicOverlay == null) {
+            Log.d("ReceiptScanner", "GraphicOverlay is null")
+        }
+
         // Add a listener to the Capture button
         buttonPhoto.setOnClickListener { takePhoto() }
     }
 
-    // Function to start camera
-    private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+    private fun bindCamera() {
+        Log.d("ReceiptScanner", "Entering bindCamera()")
+        if (cameraProvider != null) {
+            Log.d("ReceiptScanner", "cameraProvider is not null")
+            cameraProvider?.unbindAll()
+            Log.d("ReceiptScanner", "cameraProvider unbound")
+        }
 
-        cameraProviderFuture.addListener(Runnable {
-            // UI element for camera preview
-            val scannerPreview = findViewById<PreviewView>(R.id.scanner_viewfinder)
+        bindPreview()
+        bindRecognizer()
+    }
 
-            // Used to bind the lifecycle of cameras to the lifecycle owner
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+    private fun bindPreview() {
+        Log.d("ReceiptScanner", "Entering bindPreview()")
+        if (cameraProvider == null) {
+            Log.d("ReceiptScanner", "cameraProvider is null")
+            return
+        }
+        if (this.cameraProvider != null) {
+            Log.d("ReceiptScanner", "cameraProvider is not null")
+            cameraProvider!!.unbindAll()
+            Log.d("ReceiptScanner", "Unbinding all")
+        }
 
-            // Preview
-            val preview = Preview.Builder()
-                .build()
-                .also {
-                    it.setSurfaceProvider(scannerPreview.surfaceProvider)
-                }
-
-            // Image capture
-            imageCapture = ImageCapture.Builder()
-                .build()
-
-            // Select back camera as a default
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-            try {
-                // Unbind use cases before rebinding
-                cameraProvider.unbindAll()
-
-                // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture
-                )
-
-            } catch (exc: Exception) {
-                Log.e(TAG, "Use case binding failed", exc)
+        val preview = Preview.Builder()
+            .build()
+            .also {
+                it.setSurfaceProvider(scannerPreview?.surfaceProvider)
+                Log.d("ReceiptScanner", "Preview set")
             }
 
-        }, ContextCompat.getMainExecutor(this))
+        imageCapture = ImageCapture.Builder().build()
+        Log.d("ReceiptScanner", "ImageCapture set")
+
+        cameraProvider?.bindToLifecycle(
+            this, CameraSelector.DEFAULT_BACK_CAMERA, preview)
+        Log.d("ReceiptScanner", "preview bound to lifecycle")
+    }
+
+
+
+
+    public override fun onResume() {
+        super.onResume()
+        bindCamera()
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        processor?.run { this.stop() }
+    }
+
+    // Function to stop camera executor
+    override fun onDestroy() {
+        super.onDestroy()
+        processor?.run { this.stop() }
+    }
+
+    private fun bindRecognizer(){
+        Log.d("ReceiptScanner", "Entering bindRecognizer()")
+        if ( cameraProvider == null) {
+            Log.d("ReceiptScanner", "cameraProvider is null")
+            return
+        }
+        if ( analyzer != null) {
+            Log.d("ReceiptScanner", "analyzer is not null")
+            cameraProvider?.unbind(analyzer)
+            Log.d("ReceiptScanner", "analyzer unbound")
+        }
+        if ( processor != null) {
+            Log.d("ReceiptScanner", "processor is not null")
+            processor?.stop()
+            Log.d("ReceiptScanner", "processor stopped")
+        }
+        processor = TextRecognitionProcessor(this, TextRecognizerOptions.Builder().build())
+
+        if (recognizer != null )
+            Log.d("ReceiptScanner", "recognizer is not null")
+        else
+            Log.d("ReceiptScanner", "recognizer is null")
+
+        analyzer = ImageAnalysis.Builder().build()
+        Log.d("ReceiptScanner", "analyzer initialized")
+
+        analyzer?.setAnalyzer( ContextCompat.getMainExecutor(this), ImageAnalysis.Analyzer { imageProxy : ImageProxy ->
+            Log.d("ReceiptScanner", "Entering analyzer")
+            try {
+                Log.d("ReceiptScanner", "Entering try")
+
+                if (processor == null)
+                    Log.d("ReceiptScanner", "processor is null")
+
+                processor?.processImageProxy(imageProxy, graphicOverlay)
+            } catch (e: MlKitException) {
+                Log.e(TAG, "Failed to process image. Error: " + e.localizedMessage)
+                Toast.makeText(applicationContext, "Failed to process image. Error: " + e.localizedMessage, Toast.LENGTH_SHORT).show()
+            }
+        })
+        cameraProvider!!.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, analyzer)
     }
 
     // Function to take a photo
@@ -135,9 +214,9 @@ import java.util.concurrent.Executors
                     Toast.makeText(baseContext, "Photo saved: $savedUri", Toast.LENGTH_SHORT).show()
 
                     // Send the image to the next activity
-                    val intent = Intent(this@ReceiptScanner, ReceiptViewer::class.java)
-                    intent.putExtra("imageUri", savedUri)
-                    startActivity(intent)
+                    //val intent = Intent(this@ReceiptScanner, ReceiptViewer::class.java)
+                    //intent.putExtra("imageUri", savedUri)
+                    //startActivity(intent)
 
                     finish()
 
@@ -146,36 +225,41 @@ import java.util.concurrent.Executors
             })
     }
 
-    // Function to check if all permissions are granted
-    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(
-            baseContext, it
-        ) == PackageManager.PERMISSION_GRANTED
-    }
+    // Function to start camera
+    /*private fun startCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
-    // Function to request permissions
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<String>, grantResults:
-        IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (allPermissionsGranted()) {
-                startCamera()
-            } else {
-                Toast.makeText(
-                    this,
-                    "Permissions not granted by the user.",
-                    Toast.LENGTH_SHORT
-                ).show()
-                finish()
+        cameraProviderFuture.addListener(Runnable {
+            // Used to bind the lifecycle of cameras to the lifecycle owner
+            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+
+            // Preview
+            val preview = Preview.Builder()
+                .build()
+                .also {
+                    it.setSurfaceProvider(scannerPreview?.surfaceProvider)
+                }
+
+            // Image capture
+            imageCapture = ImageCapture.Builder()
+                .build()
+
+            // Select back camera as a default
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+            try {
+                // Unbind use cases before rebinding
+                cameraProvider.unbindAll()
+
+                // Bind use cases to camera
+                cameraProvider.bindToLifecycle(
+                    this, cameraSelector, preview, imageCapture,
+                )
+
+            } catch (exc: Exception) {
+                Log.e(TAG, "Use case binding failed", exc)
             }
-        }
-    }
 
-    // Function to stop camera executor
-    override fun onDestroy() {
-        super.onDestroy()
-        cameraExecutor.shutdown()
-    }
+        }, ContextCompat.getMainExecutor(this))
+    }*/
 }

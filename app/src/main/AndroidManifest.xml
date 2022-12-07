@@ -22,6 +22,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Material3.DynamicColors.DayNight"
         tools:targetApi="31">
+
+        <activity android:name=".mlkit.kotlin.LivePreviewActivity"/>
+        <activity
+            android:name=".mlkit.kotlin.CameraXLivePreviewActivity"/>
+
         <activity
             android:name=".ReceiptViewer"
             android:exported="false">
