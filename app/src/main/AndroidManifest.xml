@@ -24,38 +24,28 @@
         android:theme="@style/Theme.Material3.DynamicColors.DayNight"
         tools:targetApi="31">
 
-        <activity android:name=".mlkit.kotlin.LivePreviewActivity"/>
-
+        <activity android:name=".StillImageActivity"
+            android:parentActivityName=".MainActivity"/>
 
         <activity
             android:name=".ReceiptViewer"
             android:exported="false"
-            android:parentActivityName=".MainActivity">
-        </activity>
+            android:parentActivityName=".MainActivity"/>
 
         <activity
             android:name=".ReceiptScanner"
             android:exported="false"
-            android:parentActivityName=".MainActivity">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
+            android:parentActivityName=".MainActivity"/>
+
         <activity
             android:name=".Register"
             android:exported="false"
-            android:parentActivityName=".Login">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
+            android:parentActivityName=".Login"/>
+
         <activity
             android:name=".Login"
-            android:exported="true">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
+            android:exported="true"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -64,11 +54,8 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
         </activity>
+
         <!-- Application-wide metadata -->
         <meta-data
             android:name="com.google.firebase.ml.vision.DEPENDENCIES"

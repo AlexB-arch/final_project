@@ -17,6 +17,7 @@ import com.example.afinal.mlkit.GraphicOverlay
 import com.example.afinal.mlkit.VisionImageProcessor
 import com.example.afinal.mlkit.kotlin.textdetector.TextRecognitionProcessor
 import com.google.mlkit.common.MlKitException
+import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.File
 import java.text.SimpleDateFormat
@@ -26,15 +27,14 @@ import java.util.*
 @ExperimentalGetImage class ReceiptScanner : AppCompatActivity() {
 
     // Class variables
+    private var textRecognizer : TextRecognition? = null
     private var imageCapture: ImageCapture? = null
     private var cameraProvider: ProcessCameraProvider? = null
-    private lateinit var buttonPhoto: Button
+    private var buttonScan: Button ?= null
     private var scannerPreview: PreviewView? = null
     private var graphicOverlay: GraphicOverlay? = null
-    private var recognizer : TextRecognitionProcessor? = null
     private var analyzer : ImageAnalysis? = null
     private var processor : VisionImageProcessor? = null
-    private var cameraSelector : CameraSelector? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,7 +46,8 @@ import java.util.*
 
         // UI elements
         scannerPreview = findViewById(R.id.scanner_viewfinder)
-        val buttonPhoto = findViewById<Button>(R.id.button_capture_photo)
+        graphicOverlay = findViewById(R.id.graphic_overlay)
+        buttonScan = findViewById(R.id.button_scan)
 
         // Initialize camera provider
         ProcessCameraProvider.getInstance(this).also { providerFuture ->
@@ -58,18 +59,10 @@ import java.util.*
             }, ContextCompat.getMainExecutor(this))
         }
 
-
-
-        scannerPreview = findViewById(R.id.scanner_viewfinder)
-        if (scannerPreview == null) {
-        }
-
-        graphicOverlay = findViewById(R.id.graphic_overlay)
-        if (graphicOverlay == null) {
-        }
-
         // Add a listener to the Capture button
-        buttonPhoto.setOnClickListener { takePhoto() }
+        buttonScan?.setOnClickListener {
+            takePhoto()
+        }
     }
 
     private fun bindCamera() {
@@ -101,9 +94,6 @@ import java.util.*
             this, CameraSelector.DEFAULT_BACK_CAMERA, preview)
     }
 
-
-
-
     public override fun onResume() {
         super.onResume()
         bindCamera()
@@ -132,12 +122,14 @@ import java.util.*
             processor?.stop()
         }
         processor = TextRecognitionProcessor(this, TextRecognizerOptions.Builder().build())
+        //textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
         analyzer = ImageAnalysis.Builder().build()
 
         analyzer?.setAnalyzer( ContextCompat.getMainExecutor(this)) { imageProxy: ImageProxy ->
             try {
                 processor?.processImageProxy(imageProxy, graphicOverlay)
+
             } catch (e: MlKitException) {
                 Toast.makeText(
                     applicationContext,
@@ -145,6 +137,8 @@ import java.util.*
                     Toast.LENGTH_SHORT
                 ).show()
             }
+
+
         }
         cameraProvider!!.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, analyzer)
     }

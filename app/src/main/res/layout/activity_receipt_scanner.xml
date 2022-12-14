@@ -10,22 +10,23 @@
 
     <androidx.camera.view.PreviewView
         android:id="@+id/scanner_viewfinder"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="412dp"
+        android:layout_height="505dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.636"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <Button
-        android:id="@+id/button_capture_photo"
-        android:layout_width="112dp"
-        android:layout_height="57dp"
+        android:id="@+id/button_scan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:elevation="2dp"
-        android:text="@string/take_photo"
+        android:foreground="?android:attr/actionModeFindDrawable"
+        android:foregroundGravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -38,6 +39,19 @@
         app:layout_constraintRight_toRightOf="@id/scanner_viewfinder"
         app:layout_constraintTop_toTopOf="@id/scanner_viewfinder"
         app:layout_constraintBottom_toBottomOf="@id/scanner_viewfinder"/>
+
+    <TextView
+        android:id="@+id/receipt_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/button_scan"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scanner_viewfinder" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

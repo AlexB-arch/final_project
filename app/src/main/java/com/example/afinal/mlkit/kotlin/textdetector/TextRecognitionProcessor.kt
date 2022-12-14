@@ -30,12 +30,12 @@ import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.TextRecognizer
 import com.google.mlkit.vision.text.TextRecognizerOptionsInterface
 
-@ExperimentalGetImage /** Processor for the text detector demo. */
+@ExperimentalGetImage
 class TextRecognitionProcessor( private val context: Context, textRecognizerOptions: TextRecognizerOptionsInterface) : VisionProcessorBase<Text>(context) {
-  private val textRecognizer: TextRecognizer = TextRecognition.getClient(textRecognizerOptions)
-  private val shouldGroupRecognizedTextInBlocks: Boolean = PreferenceUtils.shouldGroupRecognizedTextInBlocks(context)
-  private val showLanguageTag: Boolean = PreferenceUtils.showLanguageTag(context)
-  private val showConfidence: Boolean = PreferenceUtils.shouldShowTextConfidence(context)
+    private val textRecognizer: TextRecognizer = TextRecognition.getClient(textRecognizerOptions)
+    private val shouldGroupRecognizedTextInBlocks: Boolean = PreferenceUtils.shouldGroupRecognizedTextInBlocks(context)
+    private val showLanguageTag: Boolean = PreferenceUtils.showLanguageTag(context)
+    private val showConfidence: Boolean = PreferenceUtils.shouldShowTextConfidence(context)
 
   override fun stop() {
     super.stop()

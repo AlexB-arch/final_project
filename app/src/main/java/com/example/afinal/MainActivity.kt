@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.ExperimentalGetImage
@@ -21,6 +22,7 @@ import com.google.firebase.database.FirebaseDatabase
     // UI elements
     private lateinit var testText: TextView
     private lateinit var fabNewScan: FloatingActionButton
+    private lateinit var choosePic : Button
 
     // Firebase Authentication
     private var mAuth: FirebaseAuth? = null
@@ -40,6 +42,7 @@ import com.google.firebase.database.FirebaseDatabase
         // UI elements
         testText = findViewById(R.id.test)
         fabNewScan = findViewById(R.id.fab_new_scan)
+        choosePic = findViewById(R.id.choose_picture_button)
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance()
@@ -58,9 +61,8 @@ import com.google.firebase.database.FirebaseDatabase
             val userId = user!!.uid
             val userRef = mDatabase!!.getReference("users").child(userId)
             userRef.get().addOnSuccessListener { snapshot ->
-                val firstName = snapshot.child("firstName").value.toString()
-                val lastName = snapshot.child("lastName").value.toString()
-                testText.text = "Welcome $firstName $lastName"
+                val username = snapshot.child("username").value.toString()
+                testText.text = "Welcome, $username"
             }
         }
 
@@ -71,6 +73,12 @@ import com.google.firebase.database.FirebaseDatabase
         // Go to Receipt Scanner
         fabNewScan.setOnClickListener {
             val intent = Intent(this@MainActivity, ReceiptScanner::class.java)
+            startActivity(intent)
+        }
+
+        // Go to StillImageActivity
+        choosePic.setOnClickListener {
+            val intent = Intent(this@MainActivity, StillImageActivity::class.java)
             startActivity(intent)
         }
     }
