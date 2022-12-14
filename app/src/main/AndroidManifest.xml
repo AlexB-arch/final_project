@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" /> <!-- Features used by the app -->
     <uses-feature android:name="android.hardware.camera.any" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <application
         android:allowBackup="true"
@@ -24,16 +25,14 @@
         tools:targetApi="31">
 
         <activity android:name=".mlkit.kotlin.LivePreviewActivity"/>
-        <activity
-            android:name=".mlkit.kotlin.CameraXLivePreviewActivity"/>
+
 
         <activity
             android:name=".ReceiptViewer"
-            android:exported="false">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
+            android:exported="false"
+            android:parentActivityName=".MainActivity">
         </activity>
+
         <activity
             android:name=".ReceiptScanner"
             android:exported="false"

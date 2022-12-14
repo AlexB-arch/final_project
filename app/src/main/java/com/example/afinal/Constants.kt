@@ -3,7 +3,7 @@ package com.example.afinal
 import android.Manifest
 
 const val NEW_RECEIPT_ID = 0
-const val TAG = "Receipt Scanner"
+const val TAG = "ReceiptScanner"
 const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
 const val REQUEST_CODE_PERMISSIONS = 10
 const val PERMISSION_REQUESTS = 1

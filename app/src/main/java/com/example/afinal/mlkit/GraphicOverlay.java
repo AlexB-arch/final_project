@@ -215,7 +215,7 @@ public class GraphicOverlay extends View {
     super(context, attrs);
     addOnLayoutChangeListener(
         (view, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) ->
-            needUpdateTransformation = true);
+            needUpdateTransformation = false);
   }
 
   /** Removes all graphics from the overlay. */
@@ -257,7 +257,7 @@ public class GraphicOverlay extends View {
       this.imageWidth = imageWidth;
       this.imageHeight = imageHeight;
       this.isImageFlipped = isFlipped;
-      needUpdateTransformation = true;
+      needUpdateTransformation = false;
     }
     postInvalidate();
   }
@@ -305,7 +305,7 @@ public class GraphicOverlay extends View {
     super.onDraw(canvas);
 
     synchronized (lock) {
-      updateTransformationIfNeeded();
+      //updateTransformationIfNeeded();
 
       for (Graphic graphic : graphics) {
         graphic.draw(canvas);

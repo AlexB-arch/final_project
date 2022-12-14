@@ -21,14 +21,12 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.ExecutorService
 
 
 @ExperimentalGetImage class ReceiptScanner : AppCompatActivity() {
 
     // Class variables
     private var imageCapture: ImageCapture? = null
-    private lateinit var cameraExecutor: ExecutorService
     private var cameraProvider: ProcessCameraProvider? = null
     private lateinit var buttonPhoto: Button
     private var scannerPreview: PreviewView? = null
@@ -50,13 +48,11 @@ import java.util.concurrent.ExecutorService
         scannerPreview = findViewById(R.id.scanner_viewfinder)
         val buttonPhoto = findViewById<Button>(R.id.button_capture_photo)
 
-        Log.d("ReceiptScanner", "onCreate")
         // Initialize camera provider
         ProcessCameraProvider.getInstance(this).also { providerFuture ->
             providerFuture.addListener({
                 // Camera provider is now guaranteed to be available
                 cameraProvider = providerFuture.get()
-                Log.d("ReceiptScanner", "Camera provider initialized")
                 // Bind the camera use cases
                 bindCamera()
             }, ContextCompat.getMainExecutor(this))
@@ -66,12 +62,10 @@ import java.util.concurrent.ExecutorService
 
         scannerPreview = findViewById(R.id.scanner_viewfinder)
         if (scannerPreview == null) {
-            Log.d("ReceiptScanner", "Preview is null")
         }
 
         graphicOverlay = findViewById(R.id.graphic_overlay)
         if (graphicOverlay == null) {
-            Log.d("ReceiptScanner", "GraphicOverlay is null")
         }
 
         // Add a listener to the Capture button
@@ -79,11 +73,8 @@ import java.util.concurrent.ExecutorService
     }
 
     private fun bindCamera() {
-        Log.d("ReceiptScanner", "Entering bindCamera()")
         if (cameraProvider != null) {
-            Log.d("ReceiptScanner", "cameraProvider is not null")
             cameraProvider?.unbindAll()
-            Log.d("ReceiptScanner", "cameraProvider unbound")
         }
 
         bindPreview()
@@ -91,30 +82,23 @@ import java.util.concurrent.ExecutorService
     }
 
     private fun bindPreview() {
-        Log.d("ReceiptScanner", "Entering bindPreview()")
         if (cameraProvider == null) {
-            Log.d("ReceiptScanner", "cameraProvider is null")
             return
         }
         if (this.cameraProvider != null) {
-            Log.d("ReceiptScanner", "cameraProvider is not null")
             cameraProvider!!.unbindAll()
-            Log.d("ReceiptScanner", "Unbinding all")
         }
 
         val preview = Preview.Builder()
             .build()
             .also {
                 it.setSurfaceProvider(scannerPreview?.surfaceProvider)
-                Log.d("ReceiptScanner", "Preview set")
             }
 
         imageCapture = ImageCapture.Builder().build()
-        Log.d("ReceiptScanner", "ImageCapture set")
 
         cameraProvider?.bindToLifecycle(
             this, CameraSelector.DEFAULT_BACK_CAMERA, preview)
-        Log.d("ReceiptScanner", "preview bound to lifecycle")
     }
 
 
@@ -138,45 +122,30 @@ import java.util.concurrent.ExecutorService
     }
 
     private fun bindRecognizer(){
-        Log.d("ReceiptScanner", "Entering bindRecognizer()")
         if ( cameraProvider == null) {
-            Log.d("ReceiptScanner", "cameraProvider is null")
             return
         }
         if ( analyzer != null) {
-            Log.d("ReceiptScanner", "analyzer is not null")
             cameraProvider?.unbind(analyzer)
-            Log.d("ReceiptScanner", "analyzer unbound")
         }
         if ( processor != null) {
-            Log.d("ReceiptScanner", "processor is not null")
             processor?.stop()
-            Log.d("ReceiptScanner", "processor stopped")
         }
         processor = TextRecognitionProcessor(this, TextRecognizerOptions.Builder().build())
 
-        if (recognizer != null )
-            Log.d("ReceiptScanner", "recognizer is not null")
-        else
-            Log.d("ReceiptScanner", "recognizer is null")
-
         analyzer = ImageAnalysis.Builder().build()
-        Log.d("ReceiptScanner", "analyzer initialized")
 
-        analyzer?.setAnalyzer( ContextCompat.getMainExecutor(this), ImageAnalysis.Analyzer { imageProxy : ImageProxy ->
-            Log.d("ReceiptScanner", "Entering analyzer")
+        analyzer?.setAnalyzer( ContextCompat.getMainExecutor(this)) { imageProxy: ImageProxy ->
             try {
-                Log.d("ReceiptScanner", "Entering try")
-
-                if (processor == null)
-                    Log.d("ReceiptScanner", "processor is null")
-
                 processor?.processImageProxy(imageProxy, graphicOverlay)
             } catch (e: MlKitException) {
-                Log.e(TAG, "Failed to process image. Error: " + e.localizedMessage)
-                Toast.makeText(applicationContext, "Failed to process image. Error: " + e.localizedMessage, Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    applicationContext,
+                    "Failed to process image. Error: " + e.localizedMessage,
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-        })
+        }
         cameraProvider!!.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, analyzer)
     }
 
@@ -213,53 +182,10 @@ import java.util.concurrent.ExecutorService
                     val savedUri = output.savedUri ?: Uri.fromFile(File(name))
                     Toast.makeText(baseContext, "Photo saved: $savedUri", Toast.LENGTH_SHORT).show()
 
-                    // Send the image to the next activity
-                    //val intent = Intent(this@ReceiptScanner, ReceiptViewer::class.java)
-                    //intent.putExtra("imageUri", savedUri)
-                    //startActivity(intent)
-
                     finish()
 
                     Log.d(TAG, "Photo capture succeeded: $savedUri")
                 }
             })
     }
-
-    // Function to start camera
-    /*private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-
-        cameraProviderFuture.addListener(Runnable {
-            // Used to bind the lifecycle of cameras to the lifecycle owner
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-
-            // Preview
-            val preview = Preview.Builder()
-                .build()
-                .also {
-                    it.setSurfaceProvider(scannerPreview?.surfaceProvider)
-                }
-
-            // Image capture
-            imageCapture = ImageCapture.Builder()
-                .build()
-
-            // Select back camera as a default
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-            try {
-                // Unbind use cases before rebinding
-                cameraProvider.unbindAll()
-
-                // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageCapture,
-                )
-
-            } catch (exc: Exception) {
-                Log.e(TAG, "Use case binding failed", exc)
-            }
-
-        }, ContextCompat.getMainExecutor(this))
-    }*/
 }
