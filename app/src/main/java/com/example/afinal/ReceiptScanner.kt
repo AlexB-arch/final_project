@@ -49,15 +49,26 @@ import java.util.*
         graphicOverlay = findViewById(R.id.graphic_overlay)
         buttonScan = findViewById(R.id.button_scan)
 
-        // Initialize camera provider
-        ProcessCameraProvider.getInstance(this).also { providerFuture ->
-            providerFuture.addListener({
-                // Camera provider is now guaranteed to be available
-                cameraProvider = providerFuture.get()
-                // Bind the camera use cases
-                bindCamera()
-            }, ContextCompat.getMainExecutor(this))
+
+
+        // If the incoming intent has an extra string named "imageUri", then set the imageUri variable to the value of the extra
+        if (intent.hasExtra("imageUri")) {
+            val imageUri = intent.data
+            Log.d("ReceiptScanner", "Image URI: $imageUri")
         }
+        else {
+           // Start normal
+            // Initialize camera provider
+            ProcessCameraProvider.getInstance(this).also { providerFuture ->
+                providerFuture.addListener({
+                    // Camera provider is now guaranteed to be available
+                    cameraProvider = providerFuture.get()
+                    // Bind the camera use cases
+                    bindCamera()
+                }, ContextCompat.getMainExecutor(this))
+            }
+        }
+
 
         // Add a listener to the Capture button
         buttonScan?.setOnClickListener {

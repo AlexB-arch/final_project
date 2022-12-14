@@ -1,5 +1,6 @@
 package com.example.afinal
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -20,8 +21,8 @@ import com.google.firebase.database.FirebaseDatabase
 @ExperimentalGetImage class MainActivity : AppCompatActivity() {
 
     // UI elements
-    private lateinit var testText: TextView
-    private lateinit var fabNewScan: FloatingActionButton
+    private lateinit var greetingText: TextView
+    private lateinit var fabNewTrip: FloatingActionButton
     private lateinit var choosePic : Button
 
     // Firebase Authentication
@@ -30,19 +31,19 @@ import com.google.firebase.database.FirebaseDatabase
     // Firebase Database
     private var mDatabase: FirebaseDatabase? = null
 
+    @SuppressLint("IntentReset")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Use Jetpack Navigation to navigate to the MainFragment
         setContentView(R.layout.activity_main)
 
-
         // Action bar title
         supportActionBar?.title = "Home"
 
         // UI elements
-        testText = findViewById(R.id.test)
-        fabNewScan = findViewById(R.id.fab_new_scan)
-        choosePic = findViewById(R.id.choose_picture_button)
+        greetingText = findViewById(R.id.greeting_text)
+        fabNewTrip = findViewById(R.id.button_new_trip)
+        //choosePic = findViewById(R.id.choose_picture_button)
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance()
@@ -57,12 +58,11 @@ import com.google.firebase.database.FirebaseDatabase
             finish()
         } else {
             // Get user information from Firebase Database
-            val user = mAuth!!.currentUser
-            val userId = user!!.uid
-            val userRef = mDatabase!!.getReference("users").child(userId)
+            val user = mAuth!!.currentUser?.uid
+            val userRef = mDatabase!!.getReference("users").child(user!!)
             userRef.get().addOnSuccessListener { snapshot ->
                 val username = snapshot.child("username").value.toString()
-                testText.text = "Welcome, $username"
+                greetingText.text = "Welcome, $username"
             }
         }
 
@@ -71,16 +71,15 @@ import com.google.firebase.database.FirebaseDatabase
         }
 
         // Go to Receipt Scanner
-        fabNewScan.setOnClickListener {
-            val intent = Intent(this@MainActivity, ReceiptScanner::class.java)
+        fabNewTrip.setOnClickListener {
+            val intent = Intent(this@MainActivity, NewTrip::class.java)
             startActivity(intent)
         }
+        //choosePic.setOnClickListener {
+            //val intent = Intent(Intent.ACTION_PICK)
+            //intent.type = "image/*"
+        //}
 
-        // Go to StillImageActivity
-        choosePic.setOnClickListener {
-            val intent = Intent(this@MainActivity, StillImageActivity::class.java)
-            startActivity(intent)
-        }
     }
 
     // User menu inflater

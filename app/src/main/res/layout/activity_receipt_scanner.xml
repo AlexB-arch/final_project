@@ -35,10 +35,11 @@
         android:id="@+id/graphic_overlay"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/receipt_content"
         app:layout_constraintLeft_toLeftOf="@id/scanner_viewfinder"
         app:layout_constraintRight_toRightOf="@id/scanner_viewfinder"
-        app:layout_constraintTop_toTopOf="@id/scanner_viewfinder"
-        app:layout_constraintBottom_toBottomOf="@id/scanner_viewfinder"/>
+        app:layout_constraintTop_toTopOf="@id/scanner_viewfinder" />
 
     <TextView
         android:id="@+id/receipt_content"
